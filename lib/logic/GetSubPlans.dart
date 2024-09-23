@@ -10,7 +10,8 @@ Future<List<List<List<dynamic>>>> getSubPlanLocal() async {
 }
 
 Future<int> getDayamountRemote(String subPlanUrl) async {
-  var response = await http.Client().get(Uri.parse(subPlanUrl + "index.html"));
+  
+  var response = await http.Client().get(Uri.parse(subPlanUrl + "index.html"),  headers: {});
   if (response.statusCode == 200) {
     dom.Document document = parse(response.body);
     return document.getElementsByClassName("day").length - 1;
@@ -34,7 +35,7 @@ Future<List<List<List<dynamic>>>> getAllSubPlanRemote(String url, int dayAmount)
 }
 
 Future<List<List<dynamic>>> getSubPlanRemote(String subPlanUrl) async {
-  var response = await http.Client().get(Uri.parse(subPlanUrl));
+  var response = await http.Client().get(Uri.parse(subPlanUrl),  headers: {});
   if (response.statusCode == 200) {
     dom.Document document = parse(response.body);
     var element = document.querySelectorAll('table>tbody')[0];
