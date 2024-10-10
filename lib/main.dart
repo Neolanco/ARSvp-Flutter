@@ -4,11 +4,11 @@ import 'logic/GetSubPlans.dart'; // Import the background logic
 import 'models/Day.dart';        // Import the Day model
 
 void main() {
-  runApp(SubPlanApp());
+  runApp(const SubPlanApp());
 }
 
 class SubPlanApp extends StatelessWidget {
-  const SubPlanApp({Key? key}) : super(key: key);
+  const SubPlanApp({super.key});
 
   static final _defaultLightColorScheme =
       ColorScheme.fromSwatch(primarySwatch: Colors.blue);
@@ -37,6 +37,8 @@ class SubPlanApp extends StatelessWidget {
 }
 
 class SubPlanScreen extends StatefulWidget {
+  const SubPlanScreen({super.key});
+
   @override
   _SubPlanScreenState createState() => _SubPlanScreenState();
 }
@@ -75,17 +77,17 @@ class _SubPlanScreenState extends State<SubPlanScreen> {
               ? '${days[currentIndex].date} (${currentIndex + 1}/${days.length})'
               : 'Substitution Plan',
         ),
-        elevation: 4,
+        elevation: 1,
       ),
       body: FutureBuilder<List<Day>>(
         future: subPlanFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(child: Text('No data available'));
+            return const Center(child: Text('No data available'));
           } else {
             // Populate the day list
             return PageView.builder(
@@ -129,22 +131,22 @@ class _SubPlanScreenState extends State<SubPlanScreen> {
                       navigateToPage(currentIndex - 1);
                     }
                   },
-                  child: Icon(Icons.arrow_left),
+                  child: const Icon(Icons.arrow_left),
                 ),
-                SizedBox(width: 16),
+                const SizedBox(width: 16),
                 FloatingActionButton(
                   onPressed: () {
                     if (currentIndex < days.length - 1) {
                       navigateToPage(currentIndex + 1);
                     }
                   },
-                  child: Icon(Icons.arrow_right),
+                  child: const Icon(Icons.arrow_right),
                 ),
               ],
             );
           } else {
             // No buttons for mobile view
-            return SizedBox.shrink();
+            return const SizedBox.shrink();
           }
         },
       ),

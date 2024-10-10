@@ -12,7 +12,7 @@ Future<List<Day>> getSubPlanLocal() async {
 }
 
 Future<int> getDayamountRemote(String subPlanUrl) async {
-  var response = await http.Client().get(Uri.parse(subPlanUrl + "index.html"));
+  var response = await http.Client().get(Uri.parse("${subPlanUrl}index.html"));
   if (response.statusCode == 200) {
     dom.Document document = parse(response.body);
     return document.getElementsByClassName("day").length - 1;
@@ -26,7 +26,7 @@ Future<List<Day>> getAllSubPlanRemote(String url, int dayAmount) async {
   
   for (int k = 1; k <= dayAmount; k++) {
     String formattedAmount = k.toString().padLeft(3, '0');
-    String dayUrl = url + "V_DC_" + formattedAmount + ".html";
+    String dayUrl = "${url}V_DC_$formattedAmount.html";
     
     // Get the substitution plans for that day
     List<SubPlan> subPlans = await getSubPlanRemote(dayUrl);
