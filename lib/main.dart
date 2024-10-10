@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'logic/GetSubPlans.dart'; // Import the background logic
 import 'models/Day.dart';        // Import the Day model
+import 'package:dynamic_color/dynamic_color.dart';
 
 void main() {
   runApp(SubPlanApp());
