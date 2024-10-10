@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'logic/GetSubPlans.dart'; // Import the background logic
+import 'models/SubPlan.dart';    // Import the SubPlan model
 
 void main() {
   runApp(SubPlanApp());
@@ -24,7 +25,7 @@ class SubPlanScreen extends StatefulWidget {
 }
 
 class _SubPlanScreenState extends State<SubPlanScreen> {
-  Future<List<List<List<dynamic>>>>? subPlanFuture;
+  Future<List<List<SubPlan>>>? subPlanFuture;
 
   @override
   void initState() {
@@ -38,7 +39,7 @@ class _SubPlanScreenState extends State<SubPlanScreen> {
       appBar: AppBar(
         title: Text('Substitution Plan'),
       ),
-      body: FutureBuilder<List<List<List<dynamic>>>>(
+      body: FutureBuilder<List<List<SubPlan>>>(
         future: subPlanFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -49,16 +50,16 @@ class _SubPlanScreenState extends State<SubPlanScreen> {
             return Center(child: Text('No data available'));
           } else {
             // Display the substitution plan
-            List<List<List<dynamic>>> subPlans = snapshot.data!;
+            List<List<SubPlan>> subPlans = snapshot.data!;
             return ListView.builder(
               itemCount: subPlans.length,
               itemBuilder: (context, dayIndex) {
                 return ExpansionTile(
                   title: Text('Day ${dayIndex + 1}'),
-                  children: subPlans[dayIndex].map((row) {
+                  children: subPlans[dayIndex].map((subPlan) {
                     return ListTile(
-                      title: Text('Class: ${row[0]}, Subject: ${row[2]}'),
-                      subtitle: Text('Teacher: ${row[3]}, Room: ${row[4]}'),
+                      title: Text('Class: ${subPlan.course}, Subject: ${subPlan.subject}'),
+                      subtitle: Text('Teacher: ${subPlan.teacher}, Room: ${subPlan.room}'),
                     );
                   }).toList(),
                 );
