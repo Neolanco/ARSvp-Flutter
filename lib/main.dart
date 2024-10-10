@@ -9,15 +9,31 @@ void main() {
 }
 
 class SubPlanApp extends StatelessWidget {
+  const SubPlanApp({Key? key}) : super(key: key);
+
+  static final _defaultLightColorScheme =
+      ColorScheme.fromSwatch(primarySwatch: Colors.blue);
+
+  static final _defaultDarkColorScheme = ColorScheme.fromSwatch(
+      primarySwatch: Colors.blue, brightness: Brightness.dark);
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Substitution Plan',
-      theme: ThemeData(
-        colorScheme: ColorScheme.light(primary: const Color.fromARGB(255, 0, 255, 34)),
-      ),
-      home: SubPlanScreen(),
-    );
+    return DynamicColorBuilder(builder: (lightColorScheme, darkColorScheme) {
+      return MaterialApp(
+        title: 'Dynamic Color',
+        theme: ThemeData(
+          colorScheme: lightColorScheme ?? _defaultLightColorScheme,
+          useMaterial3: true,
+        ),
+        darkTheme: ThemeData(
+          colorScheme: darkColorScheme ?? _defaultDarkColorScheme,
+          useMaterial3: true,
+        ),
+        themeMode: ThemeMode.system,
+        home: SubPlanScreen(),
+      );
+    });
   }
 }
 
