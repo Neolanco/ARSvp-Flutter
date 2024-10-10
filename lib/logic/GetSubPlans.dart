@@ -1,11 +1,11 @@
-// GetSubPlans.dart
+// logic/GetSubPlans.dart
 import 'package:http/http.dart' as http;
 import 'package:html/parser.dart';
 import 'package:html/dom.dart' as dom;
 import '../models/Day.dart';      // Import the Day model
+import 'dart:convert'; // For utf8 decoding
 
-Future<List<Day>> getSubPlanLocal() async {
-  var subPlanUrl = 'https://ars-leipzig.de/vertretungen/HTML/';
+Future<List<Day>> getSubPlanLocal({required String subPlanUrl}) async {
   var dayAmount = await getDayamountRemote(subPlanUrl);
   var days = await getAllSubPlanRemote(subPlanUrl, dayAmount);
   return days;
@@ -54,10 +54,13 @@ Future<String> getDateRemote(String subPlanUrl) async{
   }
 }
 
+
 Future<List<SubPlan>> getSubPlanRemote(String subPlanUrl) async {
   var response = await http.Client().get(Uri.parse(subPlanUrl));
   if (response.statusCode == 200) {
-    dom.Document document = parse(response.body);
+    // Decode the response as UTF-8
+    var body = utf8.decode(response.bodyBytes);
+    dom.Document document = parse(body);
     var element = document.querySelectorAll('table>tbody')[0];
     var data = element.querySelectorAll('tr');
     int amount = data.length;

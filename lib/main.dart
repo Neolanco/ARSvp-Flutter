@@ -1,7 +1,10 @@
+// main.dart
 import 'package:flutter/material.dart';
 import 'package:dynamic_color/dynamic_color.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'logic/GetSubPlans.dart'; // Import the background logic
-import 'models/Day.dart';        // Import the Day model
+import 'models/Day.dart'; // Import the Day model
+import 'views/settings.dart'; // Import the Settings Page
 
 void main() {
   runApp(const SubPlanApp());
@@ -10,11 +13,8 @@ void main() {
 class SubPlanApp extends StatelessWidget {
   const SubPlanApp({super.key});
 
-  static final _defaultLightColorScheme =
-      ColorScheme.fromSwatch(primarySwatch: Colors.blue);
-
-  static final _defaultDarkColorScheme = ColorScheme.fromSwatch(
-      primarySwatch: Colors.blue, brightness: Brightness.dark);
+  static final _defaultLightColorScheme = ColorScheme.fromSwatch(primarySwatch: Colors.blue);
+  static final _defaultDarkColorScheme = ColorScheme.fromSwatch(primarySwatch: Colors.blue, brightness: Brightness.dark);
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +30,7 @@ class SubPlanApp extends StatelessWidget {
           useMaterial3: true,
         ),
         themeMode: ThemeMode.system,
-        home: SubPlanScreen(),
+        home: const SubPlanScreen(),
       );
     });
   }
@@ -43,15 +43,25 @@ class SubPlanScreen extends StatefulWidget {
   _SubPlanScreenState createState() => _SubPlanScreenState();
 }
 
+String getBaseUrl() {
+  if (kIsWeb) {
+    return "to-be-implemented"; // Web specific URL
+  } else {
+    return "https://ars-leipzig.de/vertretungen/HTML/"; // Default URL
+  }
+}
+
 class _SubPlanScreenState extends State<SubPlanScreen> {
   Future<List<Day>>? subPlanFuture;
   int currentIndex = 0;
   List<Day> days = [];
+  final PageController pageController = PageController();
 
   @override
   void initState() {
     super.initState();
-    subPlanFuture = getSubPlanLocal().then((fetchedDays) {
+    String subPlanUrl = getBaseUrl();
+    subPlanFuture = getSubPlanLocal(subPlanUrl: subPlanUrl).then((fetchedDays) {
       setState(() {
         days = fetchedDays;
       });
@@ -66,18 +76,38 @@ class _SubPlanScreenState extends State<SubPlanScreen> {
     pageController.jumpToPage(index);
   }
 
-  final PageController pageController = PageController();
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          days.isNotEmpty
-              ? '${days[currentIndex].date} (${currentIndex + 1}/${days.length})'
-              : 'Substitution Plan',
+          days.isNotEmpty ? '${days[currentIndex].date} (${currentIndex + 1}/${days.length})' : 'Substitution Plan',
         ),
         elevation: 1,
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: <Widget>[
+            const DrawerHeader(
+              decoration: BoxDecoration(
+                color: Colors.blue,
+              ),
+              child: Text('Menu'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.settings),
+              title: const Text('Settings'),
+              onTap: () {
+                Navigator.pop(context); // Close the drawer
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const SettingsPage()),
+                );
+              },
+            ),
+          ],
+        ),
       ),
       body: FutureBuilder<List<Day>>(
         future: subPlanFuture,
@@ -89,7 +119,6 @@ class _SubPlanScreenState extends State<SubPlanScreen> {
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return const Center(child: Text('No data available'));
           } else {
-            // Populate the day list
             return PageView.builder(
               controller: pageController,
               itemCount: days.length,
@@ -105,10 +134,8 @@ class _SubPlanScreenState extends State<SubPlanScreen> {
                     return Card(
                       elevation: 10,
                       child: ListTile(
-                        title: Text(
-                            '${subPlan.course}, ${subPlan.position} - ${subPlan.subject}: ${subPlan.type}'),
-                        subtitle: Text(
-                            'Teacher: ${subPlan.teacher}, Room: ${subPlan.room}, Remark: ${subPlan.remark}'),
+                        title: Text('${subPlan.course}, ${subPlan.position} - ${subPlan.subject}: ${subPlan.type} ${subPlan.remark}'),
+                        subtitle: Text('Teacher: ${subPlan.teacher}, Room: ${subPlan.room}'),
                       ),
                     );
                   }).toList(),
@@ -120,7 +147,6 @@ class _SubPlanScreenState extends State<SubPlanScreen> {
       ),
       floatingActionButton: LayoutBuilder(
         builder: (context, constraints) {
-          // Show the buttons only if the screen width is larger than 600px (i.e., on desktop or tablet)
           if (constraints.maxWidth > 600) {
             return Row(
               mainAxisAlignment: MainAxisAlignment.end,
@@ -145,7 +171,6 @@ class _SubPlanScreenState extends State<SubPlanScreen> {
               ],
             );
           } else {
-            // No buttons for mobile view
             return const SizedBox.shrink();
           }
         },
