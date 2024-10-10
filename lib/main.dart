@@ -1,8 +1,7 @@
-// main.dart
 import 'package:flutter/material.dart';
+import 'package:dynamic_color/dynamic_color.dart';
 import 'logic/GetSubPlans.dart'; // Import the background logic
 import 'models/Day.dart';        // Import the Day model
-import 'package:dynamic_color/dynamic_color.dart';
 
 void main() {
   runApp(SubPlanApp());
@@ -21,7 +20,7 @@ class SubPlanApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return DynamicColorBuilder(builder: (lightColorScheme, darkColorScheme) {
       return MaterialApp(
-        title: 'Dynamic Color',
+        title: 'Substitution Plan',
         theme: ThemeData(
           colorScheme: lightColorScheme ?? _defaultLightColorScheme,
           useMaterial3: true,
@@ -44,18 +43,38 @@ class SubPlanScreen extends StatefulWidget {
 
 class _SubPlanScreenState extends State<SubPlanScreen> {
   Future<List<Day>>? subPlanFuture;
+  int currentIndex = 0;
+  List<Day> days = [];
 
   @override
   void initState() {
     super.initState();
-    subPlanFuture = getSubPlanLocal(); // Call the function from the logic file
+    subPlanFuture = getSubPlanLocal().then((fetchedDays) {
+      setState(() {
+        days = fetchedDays;
+      });
+      return fetchedDays;
+    });
   }
+
+  void navigateToPage(int index) {
+    setState(() {
+      currentIndex = index;
+    });
+    pageController.jumpToPage(index);
+  }
+
+  final PageController pageController = PageController();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Substitution Plan'),
+        title: Text(
+          days.isNotEmpty
+              ? '${days[currentIndex].date} (${currentIndex + 1}/${days.length})'
+              : 'Substitution Plan',
+        ),
         elevation: 4,
       ),
       body: FutureBuilder<List<Day>>(
@@ -68,24 +87,64 @@ class _SubPlanScreenState extends State<SubPlanScreen> {
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return Center(child: Text('No data available'));
           } else {
-            // Display the substitution plans by day
-            List<Day> days = snapshot.data!;
-
-            return ListView.builder(
+            // Populate the day list
+            return PageView.builder(
+              controller: pageController,
               itemCount: days.length,
+              onPageChanged: (index) {
+                setState(() {
+                  currentIndex = index;
+                });
+              },
               itemBuilder: (context, index) {
                 Day day = days[index];
-                return ExpansionTile(
-                  title: Text(day.date),
+                return ListView(
                   children: day.subPlans.map((subPlan) {
-                    return ListTile(
-                      title: Text('Class: ${subPlan.course}, Subject: ${subPlan.subject}'),
-                      subtitle: Text('Teacher: ${subPlan.teacher}, Room: ${subPlan.room}, Remark: ${subPlan.remark}'),
+                    return Card(
+                      elevation: 10,
+                      child: ListTile(
+                        title: Text(
+                            '${subPlan.course}, ${subPlan.position} - ${subPlan.subject}: ${subPlan.type}'),
+                        subtitle: Text(
+                            'Teacher: ${subPlan.teacher}, Room: ${subPlan.room}, Remark: ${subPlan.remark}'),
+                      ),
                     );
                   }).toList(),
                 );
               },
             );
+          }
+        },
+      ),
+      floatingActionButton: LayoutBuilder(
+        builder: (context, constraints) {
+          // Show the buttons only if the screen width is larger than 600px (i.e., on desktop or tablet)
+          if (constraints.maxWidth > 600) {
+            return Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                FloatingActionButton(
+                  onPressed: () {
+                    if (currentIndex > 0) {
+                      navigateToPage(currentIndex - 1);
+                    }
+                  },
+                  child: Icon(Icons.arrow_left),
+                ),
+                SizedBox(width: 16),
+                FloatingActionButton(
+                  onPressed: () {
+                    if (currentIndex < days.length - 1) {
+                      navigateToPage(currentIndex + 1);
+                    }
+                  },
+                  child: Icon(Icons.arrow_right),
+                ),
+              ],
+            );
+          } else {
+            // No buttons for mobile view
+            return SizedBox.shrink();
           }
         },
       ),
