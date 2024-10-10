@@ -13,7 +13,7 @@ class SubPlanApp extends StatelessWidget {
     return MaterialApp(
       title: 'Substitution Plan',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        colorScheme: ColorScheme.light(primary: const Color.fromARGB(255, 0, 255, 34)),
       ),
       home: SubPlanScreen(),
     );
@@ -39,6 +39,7 @@ class _SubPlanScreenState extends State<SubPlanScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Substitution Plan'),
+        elevation: 4,
       ),
       body: FutureBuilder<List<Day>>(
         future: subPlanFuture,
