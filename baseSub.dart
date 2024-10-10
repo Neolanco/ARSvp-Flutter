@@ -45,7 +45,7 @@ getAllSubPlanRemote(url, dayamount) async {
   );
 
   for (int k = 0; k <= dayurl.length - 1; k++) {
-    print("iteration" + k.toString());
+    print("iteration$k");
     print(dayurl[k]);
     plans.insert(k, await getSubPlanRemote(dayurl[k]));
   }

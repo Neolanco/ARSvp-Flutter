@@ -1,12 +1,14 @@
+// GetSubPlans.dart
 import 'package:http/http.dart' as http;
 import 'package:html/parser.dart';
 import 'package:html/dom.dart' as dom;
-import '../models/SubPlan.dart';
+import '../models/Day.dart';      // Import the Day model
 
-Future<List<List<SubPlan>>> getSubPlanLocal() async {
+Future<List<Day>> getSubPlanLocal() async {
   var subPlanUrl = 'https://ars-leipzig.de/vertretungen/HTML/';
   var dayAmount = await getDayamountRemote(subPlanUrl);
-  return await getAllSubPlanRemote(subPlanUrl, dayAmount);
+  var days = await getAllSubPlanRemote(subPlanUrl, dayAmount);
+  return days;
 }
 
 Future<int> getDayamountRemote(String subPlanUrl) async {
@@ -19,18 +21,37 @@ Future<int> getDayamountRemote(String subPlanUrl) async {
   }
 }
 
-Future<List<List<SubPlan>>> getAllSubPlanRemote(String url, int dayAmount) async {
-  List<String> dayUrls = [];
+Future<List<Day>> getAllSubPlanRemote(String url, int dayAmount) async {
+  List<Day> days = [];
+  
   for (int k = 1; k <= dayAmount; k++) {
     String formattedAmount = k.toString().padLeft(3, '0');
-    dayUrls.add(url + "V_DC_" + formattedAmount + ".html");
+    String dayUrl = url + "V_DC_" + formattedAmount + ".html";
+    
+    // Get the substitution plans for that day
+    List<SubPlan> subPlans = await getSubPlanRemote(dayUrl);
+    
+    // You could dynamically calculate the date based on the day number (for example)
+    // String date = 'Day $k';  // Replace this with actual date parsing logic if available
+    String date = await getDateRemote(dayUrl);  // Replace this with actual date parsing logic if available
+    
+    days.add(Day(date: date, subPlans: subPlans));
   }
 
-  List<List<SubPlan>> plans = [];
-  for (String dayUrl in dayUrls) {
-    plans.add(await getSubPlanRemote(dayUrl));
+  return days;
+}
+
+Future<String> getDateRemote(String subPlanUrl) async{
+  var response = await http.Client().get(Uri.parse(subPlanUrl));
+  if (response.statusCode == 200) {
+    dom.Document document = parse(response.body);
+    var element = document.querySelectorAll('body')[0];
+    var data = element.querySelectorAll('h1');
+    return data[0].text.trim();
+
+  } else {
+    throw Exception("Failed to load substitution plan");
   }
-  return plans;
 }
 
 Future<List<SubPlan>> getSubPlanRemote(String subPlanUrl) async {
@@ -45,13 +66,13 @@ Future<List<SubPlan>> getSubPlanRemote(String subPlanUrl) async {
     for (int k = 0; k < amount - 1; k++) {
       subPlans.add(
         SubPlan(
-          course: data[k].children[0].text.trim(),  // Klasse
-          position: data[k].children[1].text.trim(), // Pos
-          subject: data[k].children[2].text.trim(),  // Fach
-          teacher: data[k].children[3].text.trim(),  // Lehrer
-          room: data[k].children[4].text.trim(),     // Raum
-          type: data[k].children[5].text.trim(),     // Art
-          remark: data[k].children[6].text.trim(),   // Bemerkung
+          course: data[k].children[0].text.trim(),
+          position: data[k].children[1].text.trim(),
+          subject: data[k].children[2].text.trim(),
+          teacher: data[k].children[3].text.trim(),
+          room: data[k].children[4].text.trim(),
+          type: data[k].children[5].text.trim(),
+          remark: data[k].children[6].text.trim(),
         ),
       );
     }

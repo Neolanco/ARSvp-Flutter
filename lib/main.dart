@@ -1,6 +1,7 @@
+// main.dart
 import 'package:flutter/material.dart';
 import 'logic/GetSubPlans.dart'; // Import the background logic
-import 'models/SubPlan.dart';    // Import the SubPlan model
+import 'models/Day.dart';        // Import the Day model
 
 void main() {
   runApp(SubPlanApp());
@@ -25,7 +26,7 @@ class SubPlanScreen extends StatefulWidget {
 }
 
 class _SubPlanScreenState extends State<SubPlanScreen> {
-  Future<List<List<SubPlan>>>? subPlanFuture;
+  Future<List<Day>>? subPlanFuture;
 
   @override
   void initState() {
@@ -39,7 +40,7 @@ class _SubPlanScreenState extends State<SubPlanScreen> {
       appBar: AppBar(
         title: Text('Substitution Plan'),
       ),
-      body: FutureBuilder<List<List<SubPlan>>>(
+      body: FutureBuilder<List<Day>>(
         future: subPlanFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -49,17 +50,19 @@ class _SubPlanScreenState extends State<SubPlanScreen> {
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return Center(child: Text('No data available'));
           } else {
-            // Display the substitution plan
-            List<List<SubPlan>> subPlans = snapshot.data!;
+            // Display the substitution plans by day
+            List<Day> days = snapshot.data!;
+
             return ListView.builder(
-              itemCount: subPlans.length,
-              itemBuilder: (context, dayIndex) {
+              itemCount: days.length,
+              itemBuilder: (context, index) {
+                Day day = days[index];
                 return ExpansionTile(
-                  title: Text('Day ${dayIndex + 1}'),
-                  children: subPlans[dayIndex].map((subPlan) {
+                  title: Text(day.date),
+                  children: day.subPlans.map((subPlan) {
                     return ListTile(
                       title: Text('Class: ${subPlan.course}, Subject: ${subPlan.subject}'),
-                      subtitle: Text('Teacher: ${subPlan.teacher}, Room: ${subPlan.room}'),
+                      subtitle: Text('Teacher: ${subPlan.teacher}, Room: ${subPlan.room}, Remark: ${subPlan.remark}'),
                     );
                   }).toList(),
                 );

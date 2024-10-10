@@ -1,3 +1,12 @@
+// models/Day.dart
+class Day {
+  final String date;
+  final List<SubPlan> subPlans;
+
+  Day({required this.date, required this.subPlans});
+}
+
+// models/SubPlan.dart
 class SubPlan {
   final String course;
   final String position;
