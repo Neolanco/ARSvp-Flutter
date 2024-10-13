@@ -1,9 +1,9 @@
 // models/Day.dart
 class Day {
-  final String date;
+  final String dayDate;
   final List<SubPlan> subPlans;
 
-  Day({required this.date, required this.subPlans});
+  Day({required this.dayDate, required this.subPlans});
 }
 
 // models/SubPlan.dart

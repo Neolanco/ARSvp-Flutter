@@ -28,14 +28,11 @@ Future<List<Day>> getAllSubPlanRemote(String url, int dayAmount) async {
     String formattedAmount = k.toString().padLeft(3, '0');
     String dayUrl = "${url}V_DC_$formattedAmount.html";
     
-    // Get the substitution plans for that day
-    List<SubPlan> subPlans = await getSubPlanRemote(dayUrl);
+    List<SubPlan> subPlans = await getSubPlanRemote(dayUrl);    // Get the substitution plans for that day
     
-    // You could dynamically calculate the date based on the day number (for example)
-    // String date = 'Day $k';  // Replace this with actual date parsing logic if available
-    String date = await getDateRemote(dayUrl);  // Replace this with actual date parsing logic if available
+    String dayDate = await getDateRemote(dayUrl);
     
-    days.add(Day(date: date, subPlans: subPlans));
+    days.add(Day(dayDate: dayDate, subPlans: subPlans));
   }
 
   return days;
@@ -47,8 +44,9 @@ Future<String> getDateRemote(String subPlanUrl) async{
     dom.Document document = parse(response.body);
     var element = document.querySelectorAll('body')[0];
     var data = element.querySelectorAll('h1');
+    
     return data[0].text.trim();
-
+    
   } else {
     throw Exception("Failed to load substitution plan");
   }
@@ -58,7 +56,7 @@ Future<String> getDateRemote(String subPlanUrl) async{
 Future<List<SubPlan>> getSubPlanRemote(String subPlanUrl) async {
   var response = await http.Client().get(Uri.parse(subPlanUrl));
   if (response.statusCode == 200) {
-    // Decode the response as UTF-8
+    // Decode the response as UTF-8 (fixes äüö etc.)
     var body = utf8.decode(response.bodyBytes);
     dom.Document document = parse(body);
     var element = document.querySelectorAll('table>tbody')[0];

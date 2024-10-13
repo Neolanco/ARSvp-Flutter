@@ -1,4 +1,3 @@
-// main.dart
 import 'package:flutter/material.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -51,11 +50,11 @@ String getBaseUrl() {
   }
 }
 
-class _SubPlanScreenState extends State<SubPlanScreen> {
+class _SubPlanScreenState extends State<SubPlanScreen> with SingleTickerProviderStateMixin {
   Future<List<Day>>? subPlanFuture;
-  int currentIndex = 0;
   List<Day> days = [];
-  final PageController pageController = PageController();
+  late TabController _tabController;
+  int currentIndex = 0;
 
   @override
   void initState() {
@@ -64,16 +63,31 @@ class _SubPlanScreenState extends State<SubPlanScreen> {
     subPlanFuture = getSubPlanLocal(subPlanUrl: subPlanUrl).then((fetchedDays) {
       setState(() {
         days = fetchedDays;
+        _tabController = TabController(length: days.length, vsync: this);
+        _tabController.addListener(_handleTabChange); // Add listener for tab changes
       });
       return fetchedDays;
     });
   }
 
-  void navigateToPage(int index) {
+  @override
+  void dispose() {
+    _tabController.removeListener(_handleTabChange);
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  void _handleTabChange() {
+    setState(() {
+      currentIndex = _tabController.index; // Always sync with TabController index
+    });
+  }
+
+  void _switchToTab(int index) {
     setState(() {
       currentIndex = index;
+      _tabController.animateTo(currentIndex); // Change the tab
     });
-    pageController.jumpToPage(index);
   }
 
   @override
@@ -81,9 +95,16 @@ class _SubPlanScreenState extends State<SubPlanScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          days.isNotEmpty ? '${days[currentIndex].date} (${currentIndex + 1}/${days.length})' : 'Substitution Plan',
+          days.isNotEmpty ? (days[currentIndex].dayDate.split(' '))[1] : 'Substitution Plan',
         ),
         elevation: 1,
+        bottom: days.isNotEmpty
+            ? TabBar(
+                controller: _tabController,
+                isScrollable: true, // For scrollable tabs if the number is large
+                tabs: days.map((day) => Tab(text: (day.dayDate.split(' '))[0])).toList(),
+              )
+            : null,
       ),
       drawer: Drawer(
         child: ListView(
@@ -119,16 +140,9 @@ class _SubPlanScreenState extends State<SubPlanScreen> {
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return const Center(child: Text('No data available'));
           } else {
-            return PageView.builder(
-              controller: pageController,
-              itemCount: days.length,
-              onPageChanged: (index) {
-                setState(() {
-                  currentIndex = index;
-                });
-              },
-              itemBuilder: (context, index) {
-                Day day = days[index];
+            return TabBarView(
+              controller: _tabController,
+              children: days.map((day) {
                 return ListView(
                   children: day.subPlans.map((subPlan) {
                     return Card(
@@ -140,38 +154,8 @@ class _SubPlanScreenState extends State<SubPlanScreen> {
                     );
                   }).toList(),
                 );
-              },
+              }).toList(),
             );
-          }
-        },
-      ),
-      floatingActionButton: LayoutBuilder(
-        builder: (context, constraints) {
-          if (constraints.maxWidth > 600) {
-            return Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                FloatingActionButton(
-                  onPressed: () {
-                    if (currentIndex > 0) {
-                      navigateToPage(currentIndex - 1);
-                    }
-                  },
-                  child: const Icon(Icons.arrow_left),
-                ),
-                const SizedBox(width: 16),
-                FloatingActionButton(
-                  onPressed: () {
-                    if (currentIndex < days.length - 1) {
-                      navigateToPage(currentIndex + 1);
-                    }
-                  },
-                  child: const Icon(Icons.arrow_right),
-                ),
-              ],
-            );
-          } else {
-            return const SizedBox.shrink();
           }
         },
       ),
