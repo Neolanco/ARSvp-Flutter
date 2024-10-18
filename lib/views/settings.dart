@@ -47,7 +47,7 @@ class cardSource extends StatelessWidget {
 }
 
 launcherSource() async {
-  final Uri url = Uri.parse('https://github.com/Neolanco/ARSvp-Flutter');
+  //final Uri url = Uri.parse('https://github.com/Neolanco/ARSvp-Flutter');
   //if (!await launchUrl(url)) {
   //  throw Exception('Could not launch $url');
   //}
