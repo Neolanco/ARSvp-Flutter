@@ -53,6 +53,8 @@ String getBaseUrl() {
 class _SubPlanScreenState extends State<SubPlanScreen> with SingleTickerProviderStateMixin {
   Future<List<Day>>? subPlanFuture;
   List<Day> days = [];
+  List<String> courses = [];
+  String? selectedCourse; // Store selected course
   late TabController _tabController;
   int currentIndex = 0;
 
@@ -64,7 +66,9 @@ class _SubPlanScreenState extends State<SubPlanScreen> with SingleTickerProvider
       setState(() {
         days = fetchedDays;
         _tabController = TabController(length: days.length, vsync: this);
-        _tabController.addListener(_handleTabChange); // Add listener for tab changes
+        _tabController.addListener(_handleTabChange);
+
+        courses = fetchedDays.expand((day) => day.subPlans.map((subPlan) => subPlan.course)).toSet().toList();
       });
       return fetchedDays;
     });
@@ -90,6 +94,12 @@ class _SubPlanScreenState extends State<SubPlanScreen> with SingleTickerProvider
     });
   }
 
+  void _filterPlans(String? selectedCourse) {
+    setState(() {
+      this.selectedCourse = selectedCourse;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -101,7 +111,7 @@ class _SubPlanScreenState extends State<SubPlanScreen> with SingleTickerProvider
         bottom: days.isNotEmpty
             ? TabBar(
                 controller: _tabController,
-                isScrollable: true, // For scrollable tabs if the number is large
+                isScrollable: true,
                 tabs: days.map((day) => Tab(text: (day.dayDate.split(' '))[0])).toList(),
               )
             : null,
@@ -119,12 +129,17 @@ class _SubPlanScreenState extends State<SubPlanScreen> with SingleTickerProvider
             ListTile(
               leading: const Icon(Icons.settings),
               title: const Text('Settings'),
-              onTap: () {
-                Navigator.pop(context); // Close the drawer
-                Navigator.push(
+              onTap: () async {
+                Navigator.pop(context);
+                final selectedCourse = await Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const SettingsPage()),
+                  MaterialPageRoute(
+                    builder: (context) => SettingsPage(courses: courses, selectedCourse: this.selectedCourse),
+                  ),
                 );
+                if (selectedCourse != null) {
+                  _filterPlans(selectedCourse);
+                }
               },
             ),
           ],
@@ -140,9 +155,19 @@ class _SubPlanScreenState extends State<SubPlanScreen> with SingleTickerProvider
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return const Center(child: Text('No data available'));
           } else {
+            // Filter based on selected course
+            final filteredDays = days.map((day) {
+              return Day(
+                dayDate: day.dayDate,
+                subPlans: day.subPlans.where((subPlan) {
+                  return selectedCourse == null || selectedCourse == subPlan.course;
+                }).toList(),
+              );
+            }).toList();
+
             return TabBarView(
               controller: _tabController,
-              children: days.map((day) {
+              children: filteredDays.map((day) {
                 return ListView(
                   children: day.subPlans.map((subPlan) {
                     return Card(
